@@ -1,7 +1,7 @@
 from setuptools import setup
 
 description = \
-    """Claudio -- A Concise Little Audio library for getting audio samples into
+    """Claudio -- A concise little audio library for getting audio samples into
     and out of Python."""
 
 setup(
@@ -26,6 +26,7 @@ setup(
     license='ISC',
     install_requires=[
         'numpy >= 1.8.0',
-        'scipy >= 0.13.0'
+        'scipy >= 0.13.0',
+        'nose'
     ]
 )
