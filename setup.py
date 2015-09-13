@@ -1,12 +1,15 @@
+import imp
 from setuptools import setup
 
 description = \
     """Claudio -- A concise little audio library for getting audio samples into
     and out of Python."""
 
+version = imp.load_source('claudio.version', 'claudio/version.py')
+
 setup(
     name='claudio',
-    version='0.1.0',
+    version=version,
     description=description,
     author='Eric J. Humphrey',
     author_email='humphrey.eric@gmail.com',

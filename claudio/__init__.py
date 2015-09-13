@@ -8,6 +8,7 @@ from .fileio import write
 from . import pywave
 from . import sox
 from . import util
+from .version import version as __version__
 
 
 def soundsc(signal, samplerate):
