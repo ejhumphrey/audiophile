@@ -9,7 +9,7 @@ version = imp.load_source('claudio.version', 'claudio/version.py')
 
 setup(
     name='claudio',
-    version=version,
+    version=version.version,
     description=description,
     author='Eric J. Humphrey',
     author_email='humphrey.eric@gmail.com',
