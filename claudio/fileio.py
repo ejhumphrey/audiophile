@@ -75,7 +75,7 @@ class AudioFile(object):
                     self._CONVERT = True
                 if channels and self._wave_handle.channels() != channels:
                     self._CONVERT = True
-            except pywave.Error:
+            except pywave.WaveError:
                 self._CONVERT = True
             if self._CONVERT:
                 assert sox.convert(input_file=filepath,

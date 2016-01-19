@@ -1,5 +1,12 @@
+"""Unittests for CLAudio.
+
+TODO: Update this to py.test, fixtures and standalone methods. This is pretty
+old-school right here.
+"""
+
 import unittest
 import numpy as np
+import os
 
 from claudio import fileio
 from claudio import pywave
@@ -12,6 +19,7 @@ class FileIOTests(unittest.TestCase):
     channels = 1
     bytedepth = 2
     num_repeats = 110
+    test_dir = os.path.dirname(__file__)
 
     def setUp(self):
         "Generate a wave file for testing."
@@ -131,6 +139,18 @@ class FileIOTests(unittest.TestCase):
             else:
                 np.testing.assert_array_equal(
                     frame_act, frame_exp, err_msg, True)
+
+    def test_read_real_wave(self):
+        wav_file = os.path.join(self.test_dir, 'sample.wav')
+        signal, samplerate = fileio.read(wav_file)
+        assert len(signal)
+        assert samplerate
+
+    def test_read_real_aiff(self):
+        aiff_file = os.path.join(self.test_dir, 'sample.aiff')
+        signal, samplerate = fileio.read(aiff_file)
+        assert len(signal)
+        assert samplerate
 
 
 if __name__ == "__main__":
