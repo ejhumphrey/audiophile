@@ -6,6 +6,7 @@ Note: Most uncompressed audio formats are supported out of the box. However,
 for mp3, aac, mp4, and so forth, various steps must be taken to first build
 the codec libraries, and *then* compile sox from source.
 """
+from __future__ import print_function
 
 import logging
 import os
@@ -28,7 +29,8 @@ __NO_SOX__ = """SoX could not be found!
 
 def _sox_check():
     """Test for SoX."""
-    status = 'SPECIAL FILENAMES' in subprocess.check_output(['sox', '-h'])
+    sox_res = subprocess.check_output(['sox', '-h'])
+    status = 'SPECIAL FILENAMES' in str(sox_res)
     if not status:
         logging.warning(__NO_SOX__)
     return status
@@ -51,8 +53,10 @@ def split_stereo(input_file, output_file_left, output_file_right):
     ----------
     input_file : str
         Path to stereo audio file.
+
     output_file_left : str
         Path to output of left channel.
+
     output_file_right : float
         Path to output of right channel.
 
@@ -74,8 +78,10 @@ def combine_as_stereo(left_channel, right_channel, output_file):
     ----------
     left_channel : str
         Path to mono audio file that will be mapped to the left channel.
+
     right_channel : str
         Path to mono audio file that will be mapped to the right channel.
+
     output_file : float
         Path to stereo output file.
 
@@ -94,10 +100,13 @@ def trim(input_file, output_file, start_time, end_time):
     ----------
     input_file : str
         Sound file to trim.
+
     output_file : str
         File for writing output.
+
     start_time : float
         Start time of the clip.
+
     end_time : float
         End time of the clip.
 
@@ -119,10 +128,13 @@ def pad(input_file, output_file, start_duration=0, end_duration=0):
     ----------
     input_file : str
         Path to audio file.
+
     output_file : str
         Path to save output to.
+
     start_duration : float
         Number of seconds of silence to add to beginning.
+
     end_duration : float
         Number of seconds of silence to add to end.
 
@@ -147,12 +159,16 @@ def fade(input_file, output_file, fade_in_time=1, fade_out_time=8,
     ----------
     input_file : str
         Audio file.
+
     output_file : str
         File for writing output.
+
     fade_in_time : float
         Number of seconds of fade in.
+
     fade_out_time : float
         Number of seconds of fade out.
+
     fade_shape : str
         Shape of fade. 'q' for quarter sine (default), 'h' for half sine,
         't' for linear, 'l' for logarithmic, or 'p' for inverted parabola.
@@ -178,12 +194,16 @@ def convert(input_file, output_file,
     ----------
     input_file : str
         Input file to convert.
+
     output_file : str
         Output file to writer.
+
     samplerate : float, default=None
         Desired samplerate. If None, defaults to the same as input.
+
     channels : int, default=None
         Desired channels. If None, defaults to the same as input.
+
     bytedepth : int, default=None
         Desired bytedepth. If None, defaults to the same as input.
 
@@ -217,6 +237,7 @@ def mix(file_list, output_file):
     ----------
     file_list : list
         List of paths to audio files.
+
     output_file : str
         Path to output file.
 
@@ -240,6 +261,7 @@ def concatenate(file_list, output_file):
     ----------
     file_list : list
         List of paths to audio files.
+
     output_file : str
         Path to output file.
 
@@ -264,8 +286,10 @@ def normalize(input_file, output_file, db_level=-3):
     ----------
     input_file : str
         Path to input audio file.
+
     output_file : str
         Path to output audio file.
+
     db_level : output volume (db)
 
     Returns
@@ -284,10 +308,13 @@ def remove_silence(input_file, output_file,
     ----------
     input_file : str
         Path to input audio file.
+
     output_file : str
         Path to output audio file.
+
     silence_threshold : float
         Silence threshold as percentage of maximum sample value.
+
     min_voicing_duration : float
         Minimum amout of time required to be considered non-silent.
 
@@ -312,8 +339,8 @@ def remove_silence(input_file, output_file,
 
 def split_along_silence(input_file, output_file, min_silence_dur=0.5,
                         sil_pct_thresh=0.01, min_voicing_dur=1):
-    """Takes an audio file with silent sections and splits it up into seperate,
-    nonsilent files.
+    """Takes an audio file with silent sections and splits it up into
+    seperate, nonsilent files.
 
     Output file names are named as output_file001.ext, output_file002.ext, ...
 
@@ -321,12 +348,16 @@ def split_along_silence(input_file, output_file, min_silence_dur=0.5,
     ----------
     input_file : str
         Path to input audio file.
+
     output_file : str
         Path to output audio file.
+
     sil_pct_thresh : float
         Silence threshold as percentage of maximum sample value.
+
     min_voicing_duration : float
         Minimum amout of time required to be considered non-silent.
+
     min_silence_duration : float
         Minimum amout of time require to be considered silent.
 
@@ -353,17 +384,21 @@ def split_along_silence(input_file, output_file, min_silence_dur=0.5,
     return sox(args)
 
 
-def play_excerpt(input_file, duration=5, use_fade=False, remove_silence=False):
+def play_excerpt(input_file, duration=5, use_fade=False,
+                 remove_silence=False):
     """Play an excerpt of an audio file.
 
     Parameters
     ----------
     input_file : str
         Audio file to play.
+
     duration : float
         Length of excerpt in seconds.
+
     use_fade : bool
         If true, apply a fade in and fade out.
+
     remove_silence: bool
         If true, forces entire segment to have sound by removing silence.
     """
@@ -390,8 +425,10 @@ def play(input_file, start_t=0, end_t=None):
     ----------
     input_file : str
         Audio file to play.
+
     start_t : float
         Play start time.
+
     end_t : float
         Play end time.
 
@@ -487,6 +524,7 @@ def soxi_parse(key, value):
             ret_value = float(value.strip('M'))
         else:
             ret_value = value
+    # TODO(ejhumphrey): This seems like super bad practice.
     except ValueError:
         ret_value = value
     return ret_value
@@ -565,7 +603,7 @@ def file_stats(input_file):
         proc = subprocess.check_output(["sox", input_file, "-n", "stat"],
                                        stderr=subprocess.STDOUT).split('\n')
         for line in proc:
-            print line
+            print(line)
             if len(line) > 0:
                 separator = line.find(':')
                 key = line[:separator].strip().replace(' ', '').lower()
@@ -602,9 +640,9 @@ def sox(args):
         status = process_handle.wait()
         logging.info(process_handle.stdout)
         return status == 0
-    except OSError, error_msg:
+    except OSError as error_msg:
         logging.error("OSError: SoX failed! %s", error_msg)
-    except TypeError, error_msg:
+    except TypeError as error_msg:
         logging.error("TypeError: %s", error_msg)
     return False
 
