@@ -23,13 +23,15 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Multimedia :: Sound/Audio",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7"
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5"
     ],
-    keywords='machine learning, neural network',
+    keywords='audio',
     license='ISC',
     install_requires=[
         'numpy >= 1.8.0',
-        'scipy >= 0.13.0',
-        'nose'
+        'nose',
+        'six'
     ]
 )

@@ -1,6 +1,7 @@
 """Utility methods for claudio."""
 
 import numpy as np
+import six
 import struct
 import tempfile as tmp
 import wave

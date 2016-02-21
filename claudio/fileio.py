@@ -3,7 +3,6 @@
 import logging
 import numpy as np
 import os
-import scipy.io.wavfile as _spwav
 import wave
 
 import claudio.formats as formats
@@ -677,12 +676,13 @@ def write(filepath, signal, samplerate=44100, bytedepth=2):
         tmp_file = filepath
 
     signal = np.asarray(signal)
-    if 'float' in signal.dtype.name:
-        dtypes = {2: np.int16}
-        signal = np.asarray(signal*np.power(2, 8*bytedepth - 1),
-                            dtype=dtypes[bytedepth])
+    signal = signal.reshape(-1, 1) if signal.ndim == 1 else signal
 
-    _spwav.write(filename=tmp_file, data=signal, rate=int(samplerate))
+    with wave.open(tmp_file, 'w') as fp:
+        fp.setnchannels(signal.shape[-1])
+        fp.setsampwidth(bytedepth)
+        fp.setframerate(samplerate)
+        fp.writeframes(util.array_to_byte_string(signal, bytedepth))
 
     if tmp_file != filepath:
         sox.convert(tmp_file, filepath)

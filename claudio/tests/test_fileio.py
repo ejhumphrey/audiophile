@@ -8,6 +8,7 @@ import unittest
 import numpy as np
 import os
 import six
+import tempfile
 import wave
 
 import claudio.formats as formats
@@ -153,6 +154,16 @@ class FileIOTests(unittest.TestCase):
         signal, samplerate = fileio.read(aiff_file)
         assert len(signal)
         assert samplerate
+
+    def test_write_wave(self):
+        wav_file = os.path.join(self.test_dir, 'sample.wav')
+        x, fs1 = fileio.read(wav_file)
+
+        tmp = tempfile.NamedTemporaryFile(suffix='.wav')
+        fileio.write(tmp.name, x, fs1)
+        y, fs2 = fileio.read(tmp.name)
+        np.testing.assert_array_almost_equal(x, y)
+        assert fs1 == fs2
 
 
 if __name__ == "__main__":

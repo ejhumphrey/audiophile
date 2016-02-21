@@ -4,7 +4,6 @@ addons:
   apt:
     packages:
     - sox
-    - python-scipy
 
 cache:
   directories:
