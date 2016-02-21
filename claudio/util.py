@@ -3,6 +3,7 @@
 import numpy as np
 import struct
 import tempfile as tmp
+import wave
 
 
 def byte_string_to_array(byte_string, channels, bytedepth):
@@ -101,3 +102,21 @@ def classy_print(cls, msg):
         Arbitrary string message.
     """
     return "{0} :: {1}".format(cls.__name__, msg)
+
+
+def is_wave(filepath):
+    """Determines if Python's wave module can make sense of a given file.
+
+    Note that this is based solely on trying to open the file, and is not
+    concerned with the file's extension.
+
+    Returns
+    -------
+    status: bool
+        True on success.
+    """
+    try:
+        wave.open(filepath, "r")
+        return True
+    except wave.Error:
+        return False
