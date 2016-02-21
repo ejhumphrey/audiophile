@@ -13,8 +13,10 @@ def byte_string_to_array(byte_string, channels, bytedepth):
     ----------
     byte_string : str
         raw byte string
+
     channels : int
         number of channels to unpack from frame
+
     bytedepth : int
         byte-depth of audio data
 
@@ -47,6 +49,7 @@ def array_to_byte_string(array, bytedepth):
     array : np.ndarray
         Array with shape (N, channels), bounded on [-1.0, 1.0). It will,
         however, gracefull broadcast a 1D-array.
+
     bytedepth : int
         Byte-depth of audio data.
 
@@ -98,6 +101,7 @@ def classy_print(cls, msg):
     ----------
     cls : class
         Must inherit from object.
+
     msg : str, or string-like
         Arbitrary string message.
     """

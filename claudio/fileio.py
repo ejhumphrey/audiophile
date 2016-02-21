@@ -69,11 +69,12 @@ class AudioFile(object):
         channels : int
         bytedepth : int
 
-        On success, creates an open wave file handle corresponding to filepath,
-        or a tempfile after a successful SoX conversion.
+        On success, creates an open wave file handle corresponding to
+        filepath, or a tempfile after a successful SoX conversion.
 
-        Note: This could probably be pulled out into a standalone function, but
-        using class members makes this a little cleaner. Something to consider.
+        Note: This could probably be pulled out into a standalone function,
+        but using class members makes this a little cleaner. Something to
+        consider.
         """
         self._CONVERT = False
         if self._mode == 'r':
@@ -310,10 +311,13 @@ class FramedAudioFile(AudioFile):
         ----------
         time_points : array_like
             Iteritable of absolute points in time to align frames.
+
         framerate : scalar, default = None
             Uniform frequency to advance frames from the given file.
+
         stride : int, default = None
             Integer number of samples to advance frames.
+
         overlap : scalar, default = 0.5
             Percent overlap between adjacent frames.
         """
@@ -491,8 +495,8 @@ class FramedAudioFile(AudioFile):
         num_frames : int
             Number of frames in the audiofile.
 
-        Notes regarding implementation details: This does not make an effort to
-        exhaustively stride over an audio file, i.e. convolution with a
+        Notes regarding implementation details: This does not make an effort
+        to exhaustively stride over an audio file, i.e. convolution with a
         fractional hop-size.
         """
         if self._time_points is None:
@@ -550,6 +554,7 @@ class FramedAudioReader(FramedAudioFile):
         ----------
         sample_index: int
             Index at which to center the frame.
+
         framesize: int, default=None
             Number of samples to read from the file.
         """
@@ -589,6 +594,7 @@ class FramedAudioReader(FramedAudioFile):
         ----------
         time_point : scalar
             Point in time at which to align the frame.
+
         framesize: int, default=None
             Number of samples to read from the file.
         """
