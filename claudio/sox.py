@@ -12,8 +12,9 @@ import logging
 import os
 import subprocess
 
-from . import pywave
-from . import util
+import claudio.formats as formats
+import claudio.util as util
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -220,7 +221,7 @@ def convert(input_file, output_file,
     if channels:
         args += ['-c %d' % channels]
     if output_file is None:
-        output_file = util.temp_file(pywave.WAVE_EXT)
+        output_file = util.temp_file(formats.WAVE)
 
     args += [output_file]
 
@@ -479,7 +480,7 @@ def is_valid_file_format(input_file):
     # Remove dot-separator.
     file_ext = file_ext.strip(".")
     # Pure wave support
-    if file_ext == pywave.WAVE_EXT:
+    if file_ext == formats.WAVE:
         return True
 
     # Otherwise, check against SoX.
@@ -645,21 +646,3 @@ def sox(args):
     except TypeError as error_msg:
         logging.error("TypeError: %s", error_msg)
     return False
-
-
-def is_pywave(filepath):
-    """Determines if Python's wave module can make sense of a given file.
-
-    Note that this is based solely on trying to open the file, and is not
-    concerned with the file's extension.
-
-    Returns
-    -------
-    status: bool
-        True on success.
-    """
-    try:
-        pywave.open(filepath, "r")
-        return True
-    except pywave.Error:
-        return False
