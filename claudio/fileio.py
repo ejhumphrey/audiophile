@@ -678,11 +678,12 @@ def write(filepath, signal, samplerate=44100, bytedepth=2):
     signal = np.asarray(signal)
     signal = signal.reshape(-1, 1) if signal.ndim == 1 else signal
 
-    with wave.open(tmp_file, 'w') as fp:
-        fp.setnchannels(signal.shape[-1])
-        fp.setsampwidth(bytedepth)
-        fp.setframerate(samplerate)
-        fp.writeframes(util.array_to_byte_string(signal, bytedepth))
+    fp = wave.open(tmp_file, 'w')
+    fp.setnchannels(signal.shape[-1])
+    fp.setsampwidth(bytedepth)
+    fp.setframerate(samplerate)
+    fp.writeframes(util.array_to_byte_string(signal, bytedepth))
+    fp.close()
 
     if tmp_file != filepath:
         sox.convert(tmp_file, filepath)
