@@ -1,4 +1,6 @@
-# claudio
+# claudio 
+
+[![Build Status](https://travis-ci.org/ejhumphrey/claudio.svg?branch=master)](https://travis-ci.org/ejhumphrey/claudio)
 
 A concise little audio library for getting audio samples into and out of Python.
 
