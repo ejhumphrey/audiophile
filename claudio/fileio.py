@@ -4,10 +4,11 @@ import logging
 import numpy as np
 import os
 import scipy.io.wavfile as _spwav
+import wave
 
-from claudio import sox
-from claudio import pywave
-from claudio import util
+import claudio.formats as formats
+import claudio.sox as sox
+import claudio.util as util
 
 
 class AudioFile(object):
@@ -21,28 +22,37 @@ class AudioFile(object):
         specified. Otherwise, these parameters may be None when reading to use
         the default values of the audio file.
 
+        Parameters
+        ----------
         filepath : str
             Absolute path to a sound file. Does not need to exist (yet).
+
         samplerate : float, default=None
             Samplerate for the audio file.
+
         channels : int, default=None
             Number of channels for the audio file.
+
         bytedepth : int, default=None
             bytedepth (in bytes) of the returned file. For example, CD-quality
             audio has a bytedepth of 2 (16-bit).
+
         mode : str, default='r'
             Open the file for [r]eading or [w]riting.
         """
         logging.debug(util.classy_print(AudioFile, "Constructor."))
-        assert sox.is_valid_file_format(filepath)
+        if not sox.is_valid_file_format(filepath):
+            raise ValueError("Cannot handle this filetype: {}"
+                             "".format(filepath))
         if mode == "w":
+            # TODO: If/raise
             assert samplerate, "Writing audiofiles requires a samplerate."
             assert channels, "Writing audiofiles requires channels."
             assert bytedepth, "Writing audiofiles requires a bytedepth."
 
         self._filepath = filepath
         self._wave_handle = None
-        self._temp_filepath = util.temp_file(pywave.WAVE_EXT)
+        self._temp_filepath = util.temp_file(formats.WAVE)
 
         self._mode = mode
         logging.debug(util.classy_print(AudioFile, "Opening wave file."))
@@ -68,36 +78,40 @@ class AudioFile(object):
         self._CONVERT = False
         if self._mode == 'r':
             try:
-                self._wave_handle = pywave.open(filepath, 'r')
-                if bytedepth and self._wave_handle.bytedepth() != bytedepth:
+                self._wave_handle = wave.open(filepath, 'r')
+                if bytedepth and self.bytedepth != bytedepth:
                     self._CONVERT = True
-                if samplerate and self._wave_handle.samplerate() != samplerate:
+                if samplerate and self.samplerate != samplerate:
                     self._CONVERT = True
-                if channels and self._wave_handle.channels() != channels:
+                if channels and self.channels != channels:
                     self._CONVERT = True
-            except pywave.WaveError:
+            except wave.Error:
                 self._CONVERT = True
+
             if self._CONVERT:
+                # TODO: Catch status, raise on != 0
                 assert sox.convert(input_file=filepath,
                                    output_file=self._temp_filepath,
                                    samplerate=samplerate,
                                    bytedepth=bytedepth,
                                    channels=channels), \
                     "SoX Conversion failed for '%s'." % filepath
-                self._wave_handle = pywave.open(self._temp_filepath, 'r')
+                self._wave_handle = wave.open(self._temp_filepath, 'r')
         else:
             fmt_ext = os.path.splitext(self.filepath)[-1].strip('.')
-            if fmt_ext == pywave.WAVE_EXT:
-                self._wave_handle = pywave.open(self.filepath, self._mode)
+            if fmt_ext == formats.WAVE:
+                self._wave_handle = wave.open(self.filepath, self._mode)
             else:
                 # To write out non-wave files, need a temp wave object first.
                 self._CONVERT = True
-                self._wave_handle = pywave.open(
+                self._wave_handle = wave.open(
                     self._temp_filepath, self._mode)
+
             # Set file parameters
-            self._wave_handle.set_samplerate(samplerate)
-            self._wave_handle.set_bytedepth(bytedepth)
-            self._wave_handle.set_channels(channels)
+            # TODO: Encapsulate?
+            self._wave_handle.setframerate(samplerate)
+            self._wave_handle.setsampwidth(bytedepth)
+            self._wave_handle.setnchannels(channels)
 
     def reset(self):
         """
@@ -119,7 +133,7 @@ class AudioFile(object):
             logging.debug(
                 util.classy_print(AudioFile,
                                   "Conversion required for writing."))
-
+            # TODO: Update to if / raise
             assert sox.convert(input_file=self._temp_filepath,
                                output_file=self.filepath,
                                samplerate=self.samplerate,
@@ -141,7 +155,7 @@ class AudioFile(object):
         -------
         samplerate : float
         """
-        return float(self._wave_handle.samplerate())
+        return float(self._wave_handle.getframerate())
 
     @property
     def channels(self):
@@ -151,7 +165,7 @@ class AudioFile(object):
         channels : int
             number of audio channels
         """
-        return self._wave_handle.channels()
+        return self._wave_handle.getnchannels()
 
     @property
     def bytedepth(self):
@@ -161,7 +175,7 @@ class AudioFile(object):
         bytedepth : int
             bytes per sample
         """
-        return self._wave_handle.bytedepth()
+        return self._wave_handle.getsampwidth()
 
     @property
     def filepath(self):
@@ -190,7 +204,7 @@ class AudioFile(object):
         num_samples : int
             Total duration in samples of this file.
         """
-        return self._wave_handle.num_samples()
+        return self._wave_handle.getnframes()
 
     @property
     def duration(self):
@@ -216,29 +230,42 @@ class FramedAudioFile(AudioFile):
         ----------
         filepath : str
             Absolute path to an audio file.
+
         framesize : int
             Size of each frame of audio, as (num_samples, num_channels).
+
         samplerate : int, default = as-is
             Desired sample rate.
+
         channels : int, default = as-is
             Desired number of channels.
+
         bytedepth : int, default = as-is
             Desired byte depth.
+
         mode : str, default='r'
             Open the file for [r]eading or [w]riting.
+
         time_points : array_like
             Iteritable of absolute points in time to align frames.
+
         framerate : scalar, default = None
             Uniform frequency to advance frames from the given file.
+
         stride : int, default = None
             Integer number of samples to advance frames.
+
         overlap : scalar, default = 0.5
             Percent overlap between adjacent frames.
+
         alignment : str, default = 'center'
             Controls alignment of the frame, one of ['left','center','right'].
+
         offset : scalar, default = 0
             Time in seconds to shift the alignment of a frame.
 
+        Notes
+        -----
         For frame-based audio processing, there are a few roughly equivalent
         ways of defining how to advance through the data. The order of
         preference for these strategies is defined as follows:
@@ -262,8 +289,9 @@ class FramedAudioFile(AudioFile):
 
         """
         logging.debug(util.classy_print(FramedAudioFile, "Constructor."))
-        AudioFile.__init__(self, filepath, samplerate=samplerate,
-                           channels=channels, bytedepth=bytedepth, mode=mode)
+        super(FramedAudioFile, self).__init__(
+            filepath, samplerate=samplerate, channels=channels,
+            bytedepth=bytedepth, mode=mode)
 
         self._framesize = framesize
         self._alignment = alignment
@@ -312,7 +340,7 @@ class FramedAudioFile(AudioFile):
     def reset(self):
         """TODO(ejhumphrey)"""
         logging.debug(util.classy_print(FramedAudioFile, "Reset."))
-        AudioFile.reset(self)
+        super(FramedAudioFile, self).reset()
         self.framebuffer = np.zeros(self.frameshape)
         self._time_index = 0
 
@@ -468,6 +496,7 @@ class FramedAudioFile(AudioFile):
         fractional hop-size.
         """
         if self._time_points is None:
+            # TODO: Replace with if / raise
             assert self.framerate
             return int(np.ceil(self.duration * self.framerate))
         else:
@@ -509,10 +538,9 @@ class FramedAudioReader(FramedAudioFile):
         mode = 'r'
         logging.debug(util.classy_print(FramedAudioReader, "Constructor."))
         self._wave_handle = None
-        FramedAudioFile.__init__(self, filepath, framesize, samplerate,
-                                 channels, bytedepth, mode, time_points,
-                                 framerate, stride, overlap, alignment,
-                                 offset)
+        super(FramedAudioReader, self).__init__(
+            filepath, framesize, samplerate, channels, bytedepth, mode,
+            time_points, framerate, stride, overlap, alignment, offset)
 
     def read_frame_at_index(self, sample_index, framesize=None):
         """Read 'framesize' samples starting at 'sample_index'.
@@ -568,6 +596,7 @@ class FramedAudioReader(FramedAudioFile):
             self._time_point_to_sample_index(time_point), framesize)
 
     def next(self):
+        # For python 2.
         if not self._EOF:
             return self.read_frame_at_time(self._next_time_point())
         else:
@@ -577,6 +606,10 @@ class FramedAudioReader(FramedAudioFile):
     def __iter__(self):
         return self
 
+    def __next__(self):
+        # For python 3.
+        return self.next()
+
 
 def read(filepath, samplerate=None, channels=None, bytedepth=None):
     """Read the entirety of a sound file into memory.
@@ -585,8 +618,10 @@ def read(filepath, samplerate=None, channels=None, bytedepth=None):
     ----------
     filepath: str
         Path to an audio file.
+
     samplerate: scalar, or None for file's default
         Samplerate for the returned audio signal.
+
     channels: int, or None for file's default
         Number of channels for the returned audio signal.
 
@@ -594,6 +629,7 @@ def read(filepath, samplerate=None, channels=None, bytedepth=None):
     -------
     signal: np.ndarray
         Audio signal, shaped (num_samples, num_channels).
+
     samplerate: float
         Samplerate of the audio signal.
     """
@@ -617,18 +653,21 @@ def write(filepath, signal, samplerate=44100, bytedepth=2):
     ----------
     filepath: str
         Path to an audio file.
+
     signal : np.ndarray, ndim in [1,2]
         Audio signal to write to disk.
+
     samplerate: scalar, or None for file's default
         Samplerate for the returned audio signal.
+
     bytedepth : int, default=2
         Number of bytes for the audio signal; must be 2.
     """
     if bytedepth != 2:
         raise NotImplementedError("Currently only 16-bit audio is supported.")
 
-    tmp_file = util.temp_file(pywave.WAVE_EXT)
-    if pywave.WAVE_EXT == os.path.splitext(filepath)[-1].strip('.'):
+    tmp_file = util.temp_file(formats.WAVE)
+    if formats.WAVE == os.path.splitext(filepath)[-1].strip('.'):
         tmp_file = filepath
 
     signal = np.asarray(signal)
