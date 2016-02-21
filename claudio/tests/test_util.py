@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import six
 
 import claudio.util as util
 
@@ -9,11 +10,13 @@ class EncodingTest(unittest.TestCase):
     def setUp(self):
         self.mono = np.array([0.0, 0.5, -0.5])
         self.stereo = np.array([[0, -0.5], [0.5, 0.5], [-0.5, 0.0]])
-        self.mono_str2 = "\x00\x00\x00@\x00\xc0"
-        self.mono_str4 = "\x00\x00\x00\x00\x00\x00\x00@\x00\x00\x00\xc0"
-        self.stereo_str2 = "\x00\x00\x00\xc0\x00@\x00@\x00\xc0\x00\x00"
-        self.stereo_str4 = "\x00\x00\x00\x00\x00\x00\x00\xc0\x00\x00\x00@" + \
-                           "\x00\x00\x00@\x00\x00\x00\xc0\x00\x00\x00\x00"
+        self.mono_str2 = six.b("\x00\x00\x00@\x00\xc0")
+        self.mono_str4 = six.b("\x00\x00\x00\x00\x00\x00\x00"
+                               "@\x00\x00\x00\xc0")
+        self.stereo_str2 = six.b("\x00\x00\x00\xc0\x00@\x00@\x00\xc0\x00\x00")
+        self.stereo_str4 = six.b("\x00\x00\x00\x00\x00\x00\x00"
+                                 "\xc0\x00\x00\x00@\x00\x00\x00@\x00\x00\x00"
+                                 "\xc0\x00\x00\x00\x00")
 
     def tearDown(self):
         pass

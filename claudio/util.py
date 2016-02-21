@@ -3,6 +3,7 @@
 import numpy as np
 import struct
 import tempfile as tmp
+import wave
 
 
 def byte_string_to_array(byte_string, channels, bytedepth):
@@ -12,8 +13,10 @@ def byte_string_to_array(byte_string, channels, bytedepth):
     ----------
     byte_string : str
         raw byte string
+
     channels : int
         number of channels to unpack from frame
+
     bytedepth : int
         byte-depth of audio data
 
@@ -46,6 +49,7 @@ def array_to_byte_string(array, bytedepth):
     array : np.ndarray
         Array with shape (N, channels), bounded on [-1.0, 1.0). It will,
         however, gracefull broadcast a 1D-array.
+
     bytedepth : int
         Byte-depth of audio data.
 
@@ -97,7 +101,26 @@ def classy_print(cls, msg):
     ----------
     cls : class
         Must inherit from object.
+
     msg : str, or string-like
         Arbitrary string message.
     """
     return "{0} :: {1}".format(cls.__name__, msg)
+
+
+def is_wave(filepath):
+    """Determines if Python's wave module can make sense of a given file.
+
+    Note that this is based solely on trying to open the file, and is not
+    concerned with the file's extension.
+
+    Returns
+    -------
+    status: bool
+        True on success.
+    """
+    try:
+        wave.open(filepath, "r")
+        return True
+    except wave.Error:
+        return False

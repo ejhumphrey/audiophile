@@ -7,14 +7,16 @@ old-school right here.
 import unittest
 import numpy as np
 import os
+import six
+import wave
 
-from claudio import fileio
-from claudio import pywave
-from claudio import util
+import claudio.formats as formats
+import claudio.fileio as fileio
+import claudio.util as util
 
 
 class FileIOTests(unittest.TestCase):
-    input_file = util.temp_file(pywave.WAVE_EXT)
+    input_file = util.temp_file(formats.WAVE)
     samplerate = 440
     channels = 1
     bytedepth = 2
@@ -23,15 +25,15 @@ class FileIOTests(unittest.TestCase):
 
     def setUp(self):
         "Generate a wave file for testing."
-        self.wave_handle = pywave.open(self.input_file, mode="w")
-        self.wave_handle.set_samplerate(self.samplerate)
-        self.wave_handle.set_channels(self.channels)
-        self.wave_handle.set_bytedepth(self.bytedepth)
+        self.wave_handle = wave.open(self.input_file, mode="w")
+        self.wave_handle.setframerate(self.samplerate)
+        self.wave_handle.setnchannels(self.channels)
+        self.wave_handle.setsampwidth(self.bytedepth)
 
         # Corresponds to [0.0, 0.5, 0.0, -0.5], or a sine-wave at
         # half-Nyquist. This should sound tonal, for debugging.
         self.wave_handle.writeframes(
-            "\x00\x00\x00@\x00\x00\x00\xc0" * self.num_repeats)
+            six.b('\x00\x00\x00@\x00\x00\x00\xc0') * self.num_repeats)
         self.wave_handle.close()
 
     def test_AudioFile_params(self):

@@ -1,13 +1,15 @@
 import os
 import unittest
+import six
+import wave
 
-from claudio import sox
-from claudio import util
-from claudio import pywave
+import claudio.formats as formats
+import claudio.sox as sox
+import claudio.util as util
 
 
 class SoxTests(unittest.TestCase):
-    input_file = util.temp_file(pywave.WAVE_EXT)
+    input_file = util.temp_file(formats.WAVE)
     samplerate = 1000
     channels = 1
     bytedepth = 2
@@ -15,14 +17,15 @@ class SoxTests(unittest.TestCase):
     @classmethod
     def setUp(self):
         "Generate a local wave file for testing sox."
-        self.wave_handle = pywave.open(self.input_file, mode="w")
-        self.wave_handle.set_samplerate(self.samplerate)
-        self.wave_handle.set_channels(self.channels)
-        self.wave_handle.set_bytedepth(self.bytedepth)
+        self.wave_handle = wave.open(self.input_file, mode="w")
+        self.wave_handle.setframerate(self.samplerate)
+        self.wave_handle.setnchannels(self.channels)
+        self.wave_handle.setsampwidth(self.bytedepth)
 
         # Corresponds to [0.0, 0.5, 0.0, -0.5], or a sine-wave at
         # half-Nyquist. This should sound tonal, for debugging.
-        self.wave_handle.writeframes("\x00\x00\x00@\x00\x00\x00\xc0" * 200)
+        self.wave_handle.writeframes(
+            six.b("\x00\x00\x00@\x00\x00\x00\xc0") * 200)
         self.wave_handle.close()
 
     def test_formats(self):
@@ -37,7 +40,7 @@ class SoxTests(unittest.TestCase):
                          "Invalid extension failed.")
 
     def test_convert_samplerate(self):
-        output_file = util.temp_file(pywave.WAVE_EXT)
+        output_file = util.temp_file(formats.WAVE)
         self.assert_(
             sox.convert(input_file=self.input_file,
                         output_file=output_file,
@@ -45,9 +48,9 @@ class SoxTests(unittest.TestCase):
                         channels=self.channels,
                         bytedepth=self.bytedepth),
             "Conversion with different samplerate failed.")
-        wav_handle = pywave.open(output_file, mode='r')
+        wav_handle = wave.open(output_file, mode='r')
         self.assertEqual(self.samplerate / 2,
-                         wav_handle.samplerate(),
+                         wav_handle.getframerate(),
                          "Samplerate conversion failed.")
 
     def test_convert_format(self):
@@ -61,7 +64,7 @@ class SoxTests(unittest.TestCase):
             "Conversion to .aif failed.")
 
     def test_trim(self):
-        output_file = util.temp_file(pywave.WAVE_EXT)
+        output_file = util.temp_file(formats.WAVE)
         self.assert_(
             sox.trim(input_file=self.input_file,
                      output_file=output_file,
