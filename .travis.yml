@@ -1,0 +1,36 @@
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - sox
+
+cache:
+  directories:
+  - $HOME/env
+
+language: python
+
+notifications:
+  email: false
+
+python:
+    - "2.7"
+    - "3.4"
+    - "3.5"
+
+install:
+    # install your own package into the environment
+    # pip install -e rather than setup.py, so that coverage can find the source
+    - pip install -e ./
+
+script:
+    - python --version
+    - nosetests -v -w .
+
+after_success:
+    - coveralls
+    - pip uninstall -y claudio
+
+after_failure:
+    - pip uninstall -y claudio
