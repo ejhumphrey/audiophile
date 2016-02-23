@@ -26,7 +26,7 @@ install:
 
 script:
     - python --version
-    - py.test -v -w .
+    - py.test --doctest-modules --pep8 coveralls -v --cov coveralls
 
 after_success:
     - coveralls

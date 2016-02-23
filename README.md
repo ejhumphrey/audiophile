@@ -1,8 +1,7 @@
-# claudio 
-
-[![Build Status](https://travis-ci.org/ejhumphrey/claudio.svg?branch=master)](https://travis-ci.org/ejhumphrey/claudio)
+# claudio
 
 A concise little audio library for getting audio samples into and out of Python.
+[![Build Status](https://travis-ci.org/ejhumphrey/claudio.svg?branch=master)](https://travis-ci.org/ejhumphrey/claudio) [![Coverage Status](https://coveralls.io/repos/github/ejhumphrey/claudio/badge.svg?branch=master)](https://coveralls.io/github/ejhumphrey/claudio?branch=master)
 
 ## Installation
 
