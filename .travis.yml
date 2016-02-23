@@ -19,6 +19,12 @@ python:
     - "3.4"
     - "3.5"
 
+before_install:
+    - bash .travis_dependencies.sh
+    - export PATH="$HOME/env/miniconda$TRAVIS_PYTHON_VERSION/bin:$PATH";
+    - hash -r
+    - source activate test-environment
+
 install:
     # install your own package into the environment
     # pip install -e rather than setup.py, so that coverage can find the source
@@ -26,7 +32,7 @@ install:
 
 script:
     - python --version
-    - py.test -v .
+    - nosetests --with-coverage --cover-erase --cover-package=claudio -v -w .
 
 after_success:
     - coveralls
