@@ -125,3 +125,22 @@ def is_wave(filepath):
         return True
     except wave.Error:
         return False
+
+
+def validate_clargs(args):
+    """Perform some simple checks that nothing sinister is falling through to
+    the commandline.
+
+    Parameters
+    ----------
+    args : list of str
+        Arguments to pass to the commandline.
+
+    Raises
+    ------
+    ValueError if anything looks amiss.
+    """
+    for arg in args:
+        conditions = [arg.lower() == 'sudo', ';' in arg, arg == 'rm']
+        if any(conditions):
+            raise ValueError("Received suspicious arguments: {}".format(args))
