@@ -5,16 +5,29 @@ import numpy as np
 import os
 import wave
 
+import claudio.ffmpeg as ffmpeg
 import claudio.formats as formats
 import claudio.sox as sox
 import claudio.util as util
+
+SOX = 'sox'
+FFMPEG = 'ffmpeg'
+
+CONVERTERS = {
+    SOX: sox,
+    FFMPEG: ffmpeg
+}
+
+
+class AudioError(BaseException):
+    pass
 
 
 class AudioFile(object):
     """Abstract AudioFile base class."""
 
     def __init__(self, filepath, samplerate=None, channels=None,
-                 bytedepth=None, mode="r"):
+                 bytedepth=None, mode="r", converter=SOX):
         """Base class for interfacing with audio files.
 
         When writing audio files, samplerate, channels, and bytedepth must be
@@ -38,11 +51,14 @@ class AudioFile(object):
 
         mode : str, default='r'
             Open the file for [r]eading or [w]riting.
+
+        converter : str
+            Conversion tool to use, currently one of ['sox', 'ffmpeg'].
         """
         logging.debug(util.classy_print(AudioFile, "Constructor."))
-        if not sox.is_valid_file_format(filepath):
-            raise ValueError("Cannot handle this filetype: {}"
-                             "".format(filepath))
+        # if not CONVERTERS[converter].is_valid_file_format(filepath):
+        #     raise ValueError("Cannot handle this filetype: {}"
+        #                      "".format(filepath))
         if mode == "w":
             # TODO: If/raise
             assert samplerate, "Writing audiofiles requires a samplerate."
@@ -52,6 +68,7 @@ class AudioFile(object):
         self._filepath = filepath
         self._wave_handle = None
         self._temp_filepath = util.temp_file(formats.WAVE)
+        self._converter = converter
 
         self._mode = mode
         logging.debug(util.classy_print(AudioFile, "Opening wave file."))
@@ -89,13 +106,15 @@ class AudioFile(object):
                 self._CONVERT = True
 
             if self._CONVERT:
-                # TODO: Catch status, raise on != 0
-                assert sox.convert(input_file=filepath,
-                                   output_file=self._temp_filepath,
-                                   samplerate=samplerate,
-                                   bytedepth=bytedepth,
-                                   channels=channels), \
-                    "SoX Conversion failed for '%s'." % filepath
+                success = CONVERTERS[self._converter].convert(
+                    input_file=filepath,
+                    output_file=self._temp_filepath,
+                    samplerate=samplerate,
+                    bytedepth=bytedepth,
+                    channels=channels)
+                if not success:
+                    raise AudioError(
+                        "Conversion failed for '{}'.".format(filepath))
                 self._wave_handle = wave.open(self._temp_filepath, 'r')
         else:
             fmt_ext = os.path.splitext(self.filepath)[-1].strip('.')
@@ -133,12 +152,15 @@ class AudioFile(object):
             logging.debug(
                 util.classy_print(AudioFile,
                                   "Conversion required for writing."))
-            # TODO: Update to if / raise
-            assert sox.convert(input_file=self._temp_filepath,
-                               output_file=self.filepath,
-                               samplerate=self.samplerate,
-                               bytedepth=self.bytedepth,
-                               channels=self.channels)
+            success = CONVERTERS[self._converter].convert(
+                input_file=self._temp_filepath,
+                output_file=self.filepath,
+                samplerate=self.samplerate,
+                bytedepth=self.bytedepth,
+                channels=self.channels)
+            if not success:
+                raise AudioError(
+                    "Conversion failed for '{}'.".format(self.filepath))
         if self._temp_filepath and os.path.exists(self._temp_filepath):
             logging.debug(util.classy_print(AudioFile,
                                             "Temporary file deleted."))
@@ -223,7 +245,7 @@ class FramedAudioFile(AudioFile):
     def __init__(self, filepath, framesize,
                  samplerate=None, channels=None, bytedepth=None, mode='r',
                  time_points=None, framerate=None, stride=None, overlap=0.5,
-                 alignment='center', offset=0):
+                 alignment='center', offset=0, converter=SOX):
         """Frame-based audio file parsing.
 
         Parameters
@@ -264,6 +286,9 @@ class FramedAudioFile(AudioFile):
         offset : scalar, default = 0
             Time in seconds to shift the alignment of a frame.
 
+        converter : str
+            Conversion tool to use, currently one of ['sox', 'ffmpeg'].
+
         Notes
         -----
         For frame-based audio processing, there are a few roughly equivalent
@@ -291,7 +316,7 @@ class FramedAudioFile(AudioFile):
         logging.debug(util.classy_print(FramedAudioFile, "Constructor."))
         super(FramedAudioFile, self).__init__(
             filepath, samplerate=samplerate, channels=channels,
-            bytedepth=bytedepth, mode=mode)
+            bytedepth=bytedepth, mode=mode, converter=converter)
 
         self._framesize = framesize
         self._alignment = alignment
@@ -535,7 +560,7 @@ class FramedAudioReader(FramedAudioFile):
     def __init__(self, filepath, framesize,
                  samplerate=None, channels=None, bytedepth=None,
                  overlap=0.5, stride=None, framerate=None, time_points=None,
-                 alignment='center', offset=0):
+                 alignment='center', offset=0, converter=SOX):
 
         # Always read.
         mode = 'r'
@@ -543,7 +568,8 @@ class FramedAudioReader(FramedAudioFile):
         self._wave_handle = None
         super(FramedAudioReader, self).__init__(
             filepath, framesize, samplerate, channels, bytedepth, mode,
-            time_points, framerate, stride, overlap, alignment, offset)
+            time_points, framerate, stride, overlap, alignment, offset,
+            converter)
 
     def read_frame_at_index(self, sample_index, framesize=None):
         """Read 'framesize' samples starting at 'sample_index'.
@@ -616,7 +642,8 @@ class FramedAudioReader(FramedAudioFile):
         return self.next()
 
 
-def read(filepath, samplerate=None, channels=None, bytedepth=None):
+def read(filepath, samplerate=None, channels=None, bytedepth=None,
+         converter=SOX):
     """Read the entirety of a sound file into memory.
 
     Parameters
@@ -630,6 +657,9 @@ def read(filepath, samplerate=None, channels=None, bytedepth=None):
     channels: int, or None for file's default
         Number of channels for the returned audio signal.
 
+    converter : str
+        Conversion tool to use, currently one of ['sox', 'ffmpeg'].
+
     Returns
     -------
     signal: np.ndarray
@@ -641,7 +671,8 @@ def read(filepath, samplerate=None, channels=None, bytedepth=None):
     def_framesize = 50000
     reader = FramedAudioReader(
         filepath, framesize=def_framesize, samplerate=samplerate,
-        channels=channels, bytedepth=bytedepth, overlap=0, alignment='left')
+        channels=channels, bytedepth=bytedepth, overlap=0, alignment='left',
+        converter=converter)
     signal = np.zeros([reader.num_frames * reader.framesize,
                        reader.channels])
     # Step through the file
@@ -651,7 +682,7 @@ def read(filepath, samplerate=None, channels=None, bytedepth=None):
     return signal[:reader.num_samples], reader.samplerate
 
 
-def write(filepath, signal, samplerate=44100, bytedepth=2):
+def write(filepath, signal, samplerate=44100, bytedepth=2, converter=SOX):
     """Write an audio signal to disk.
 
     Parameters
@@ -667,6 +698,9 @@ def write(filepath, signal, samplerate=44100, bytedepth=2):
 
     bytedepth : int, default=2
         Number of bytes for the audio signal; must be 2.
+
+    converter : str
+        Conversion tool to use, currently one of ['sox', 'ffmpeg'].
     """
     if bytedepth != 2:
         raise NotImplementedError("Currently only 16-bit audio is supported.")

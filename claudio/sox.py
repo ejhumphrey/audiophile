@@ -28,7 +28,11 @@ __NO_SOX__ = """SoX could not be found!
     path variables."""
 
 
-def _sox_check():
+class SoXError(BaseException):
+    pass
+
+
+def _check():
     """Test for SoX."""
     sox_res = subprocess.check_output(['sox', '-h'])
     status = 'SPECIAL FILENAMES' in str(sox_res)
@@ -37,14 +41,10 @@ def _sox_check():
     return status
 
 
-has_sox = _sox_check()
-
-
-def assert_sox():
+def check_sox():
     """Assert that SoX is present and can be called."""
-    if has_sox:
-        return
-    assert False, "SoX assertion failed.\n{}".format(__NO_SOX__)
+    if not _check():
+        raise SoXError("SoX check failed.\n{}".format(__NO_SOX__))
 
 
 def split_stereo(input_file, output_file_left, output_file_right):
@@ -116,6 +116,7 @@ def trim(input_file, output_file, start_time, end_time):
     status : bool
         True on success.
     """
+    # TODO: Remove asserts
     assert start_time >= 0, "The value for 'start_time' must be positive."
     assert end_time >= 0, "The value for 'end_time' must be positive."
     return sox(['sox', input_file, output_file, 'trim',
@@ -145,6 +146,7 @@ def pad(input_file, output_file, start_duration=0, end_duration=0):
         True on success.
 
     """
+    # TODO: Remove asserts
     assert start_duration >= 0, "Start duration must be positive."
     assert end_duration >= 0, "End duration must be positive."
     return sox(['sox', input_file, output_file, 'pad',
@@ -180,6 +182,7 @@ def fade(input_file, output_file, fade_in_time=1, fade_out_time=8,
         True on success.
     """
     fade_shapes = ['q', 'h', 't', 'l', 'p']
+    # TODO: Remove asserts
     assert fade_shape in fade_shapes, "Invalid fade shape."
     assert fade_in_time >= 0, "Fade in time must be nonnegative."
     assert fade_out_time >= 0, "Fade out time must be nonnegative."
@@ -216,6 +219,7 @@ def convert(input_file, output_file,
     args = ['sox', '--no-dither', input_file]
 
     if bytedepth:
+        # TODO: Remove assert
         assert bytedepth in [1, 2, 3, 4, 8]
         args += ['-b%d' % (bytedepth * 8)]
     if channels:
@@ -438,7 +442,8 @@ def play(input_file, start_t=0, end_t=None):
     status : bool
         True if successful.
     """
-    assert_sox()
+    check_sox()
+    # TODO: Remove assert
     assert is_valid_file_format(input_file), "Invalid file format."
 
     args = ["play"]
@@ -485,7 +490,8 @@ def is_valid_file_format(input_file):
 
     # Otherwise, check against SoX.
     else:
-        assert_sox()
+        check_sox()
+        # TODO: Use check_output, this is pretty gross.
         status = os.popen('sox -h').readlines()
         for state in status:
             # Find the entry with ASCII audio formats.
@@ -629,7 +635,8 @@ def sox(args):
     status : bool
         True on success.
     """
-    assert_sox()
+    check_sox()
+    util.validate_clargs(args)
     if args[0].lower() != "sox":
         args.insert(0, "sox")
     else:

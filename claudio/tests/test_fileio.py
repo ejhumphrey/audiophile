@@ -155,6 +155,12 @@ class FileIOTests(unittest.TestCase):
         assert len(signal)
         assert samplerate
 
+    def test_read_real_aiff_ffmpeg(self):
+        aiff_file = os.path.join(self.test_dir, 'sample.aiff')
+        signal, samplerate = fileio.read(aiff_file, converter='ffmpeg')
+        assert len(signal)
+        assert samplerate
+
     def test_write_wave(self):
         wav_file = os.path.join(self.test_dir, 'sample.wav')
         x, fs1 = fileio.read(wav_file)
