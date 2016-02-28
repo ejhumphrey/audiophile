@@ -4,7 +4,7 @@ addons:
   apt:
     packages:
     - sox
-    - ffmpeg
+    - avconv
 
 cache:
   directories:

@@ -7,6 +7,7 @@ from __future__ import print_function
 import logging
 import os
 import subprocess
+import sys
 
 import claudio.formats as formats
 import claudio.util as util
@@ -29,7 +30,12 @@ class FFMpegError(BaseException):
 
 
 def __BIN__():
-    return 'ffmpeg'
+    bname = 'ffmpeg'
+    if sys.platform in ["linux", "linux2"]:
+        bname = 'avconv'
+    elif sys.platform == "darwin":
+        pass
+    return bname
 
 
 def _check():
