@@ -4,7 +4,7 @@ addons:
   apt:
     packages:
     - sox
-    - avconv
+    -
 
 cache:
   directories:
@@ -14,6 +14,9 @@ language: python
 
 notifications:
   email: false
+
+before_script:
+    - "apt-get install -y -q install ffmpeg"
 
 python:
     - "2.7"
