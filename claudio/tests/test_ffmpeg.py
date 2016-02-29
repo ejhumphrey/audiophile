@@ -38,14 +38,17 @@ def test___BIN__():
     assert ffmpeg.__BIN__()
 
 
+@pytest.mark.skipif(not ffmpeg._check(), reason="Cannot find ffmpeg.")
 def test_ffmpeg__check():
     assert ffmpeg._check()
 
 
+@pytest.mark.skipif(not ffmpeg._check(), reason="Cannot find ffmpeg.")
 def test_ffmpeg_check_ffmpeg():
     ffmpeg.check_ffmpeg()
 
 
+@pytest.mark.skipif(not ffmpeg._check(), reason="Cannot find ffmpeg.")
 def test_ffmpeg_convert(sample_wav):
     fout = util.temp_file(formats.WAVE)
     fin = str(sample_wav)

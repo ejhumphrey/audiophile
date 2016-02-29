@@ -11,6 +11,10 @@ import subprocess
 import claudio.formats as formats
 import claudio.util as util
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = OSError
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -40,10 +44,17 @@ def _check():
     success : bool
         True if it looks like ffmpeg exists.
     """
-    info = subprocess.check_output([__BIN__(), '-version'])
-    status = 'fmpeg version' in str(info)
-    if not status:
-        logging.warning(__NO_FFMPEG__)
+    try:
+        info = subprocess.check_output([__BIN__(), '-version'])
+        status = 'ffmpeg version' in str(info)
+        message = __NO_FFMPEG__
+    except (FileNotFoundError, subprocess.CalledProcessError) as derp:
+        status = False
+        message = __NO_FFMPEG__ + "\n{}".format(derp)
+    if status:
+        logging.info(message)
+    else:
+        logging.warning(message)
     return status
 
 

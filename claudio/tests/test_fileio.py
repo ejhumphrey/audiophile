@@ -3,7 +3,7 @@
 TODO: Update this to py.test, fixtures and standalone methods. This is pretty
 old-school right here.
 """
-
+import pytest
 import unittest
 import numpy as np
 import os
@@ -11,6 +11,7 @@ import six
 import tempfile
 import wave
 
+import claudio.ffmpeg as ffmpeg
 import claudio.formats as formats
 import claudio.fileio as fileio
 import claudio.util as util
@@ -155,12 +156,6 @@ class FileIOTests(unittest.TestCase):
         assert len(signal)
         assert samplerate
 
-    def test_read_real_aiff_ffmpeg(self):
-        aiff_file = os.path.join(self.test_dir, 'sample.aiff')
-        signal, samplerate = fileio.read(aiff_file, converter='ffmpeg')
-        assert len(signal)
-        assert samplerate
-
     def test_write_wave(self):
         wav_file = os.path.join(self.test_dir, 'sample.wav')
         x, fs1 = fileio.read(wav_file)
@@ -170,6 +165,14 @@ class FileIOTests(unittest.TestCase):
         y, fs2 = fileio.read(tmp.name)
         np.testing.assert_array_almost_equal(x, y)
         assert fs1 == fs2
+
+
+@pytest.mark.skipif(not ffmpeg._check(), reason="Cannot find ffmpeg.")
+def test_read_real_aiff_ffmpeg():
+    aiff_file = os.path.join(os.path.dirname(__file__), 'sample.aiff')
+    signal, samplerate = fileio.read(aiff_file, converter='ffmpeg')
+    assert len(signal)
+    assert samplerate
 
 
 if __name__ == "__main__":

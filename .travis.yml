@@ -15,9 +15,6 @@ language: python
 notifications:
   email: false
 
-before_script:
-    - "sudo apt-get install -y ffmpeg"
-
 python:
     - "2.7"
     - "3.4"
