@@ -166,5 +166,12 @@ class FileIOTests(unittest.TestCase):
         assert fs1 == fs2
 
 
+def test_read_empty_wav():
+    sfile = os.path.join(os.path.dirname(__file__), 'empty.wav')
+    signal, samplerate = fileio.read(sfile)
+    assert len(signal) == 0
+    assert samplerate
+
+
 if __name__ == "__main__":
     unittest.main()
