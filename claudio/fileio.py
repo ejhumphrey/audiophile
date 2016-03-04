@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 import os
+import warnings
 import wave
 
 import claudio.formats as formats
@@ -57,6 +58,8 @@ class AudioFile(object):
         logging.debug(util.classy_print(AudioFile, "Opening wave file."))
         self.__get_handle__(self.filepath, samplerate, channels, bytedepth)
         logging.debug(util.classy_print(AudioFile, "Success!"))
+        if self.duration == 0:
+            warnings.warn("Caution: You have opened an empty sound file!")
 
     def __get_handle__(self, filepath, samplerate, channels, bytedepth):
         """Get hooks into a wave object for reading or writing.
@@ -122,7 +125,7 @@ class AudioFile(object):
         -------
         None
         """
-        self._EOF = False
+        pass
 
     def close(self):
         """Explicit destructor."""
@@ -296,7 +299,7 @@ class FramedAudioFile(AudioFile):
         self._framesize = framesize
         self._alignment = alignment
         self._offset = offset
-        self._time_points = None
+        self._time_points = [None]
         logging.debug(util.classy_print(FramedAudioFile, "Init Striding."))
         self._init_striding(time_points, framerate, stride, overlap)
         self.reset()
@@ -505,6 +508,10 @@ class FramedAudioFile(AudioFile):
         else:
             return len(self._time_points)
 
+    @property
+    def end_of_file(self):
+        return self._time_index >= len(self._time_points)
+
     def _next_time_point(self):
         """Compute the next LEFT-ALIGNED time point given the current
         state of parameters.
@@ -512,10 +519,11 @@ class FramedAudioFile(AudioFile):
         Takes into account the three parameters of absolute index, alignment,
         and offset.
         """
+        if self._time_points is None:
+            raise ValueError("Audio file has no time grid; is it empty?")
+
         time_point = self._time_points[self._time_index]
         self._time_index += 1
-        if self._time_index == len(self._time_points):
-            self._EOF = True
 
         if self.alignment == 'center':
             time_point -= 0.5 * self.framesize / self.samplerate
@@ -602,7 +610,7 @@ class FramedAudioReader(FramedAudioFile):
 
     def next(self):
         # For python 2.
-        if not self._EOF:
+        if not self.end_of_file:
             return self.read_frame_at_time(self._next_time_point())
         else:
             self.reset()
