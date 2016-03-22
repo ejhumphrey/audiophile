@@ -1,7 +1,6 @@
 """Utility methods for claudio."""
 
 import numpy as np
-import six
 import struct
 import tempfile as tmp
 import wave
@@ -27,7 +26,7 @@ def byte_string_to_array(byte_string, channels, bytedepth):
         array with shape (num_samples, channels), bounded on [-1.0, 1.0)
     """
     # Number of values per channel.
-    N = len(byte_string) / channels / bytedepth
+    N = int(len(byte_string) / channels / bytedepth)
     # Assume 2-byte encoding.
     fmt = 'h'
     if bytedepth == 3:
@@ -39,7 +38,7 @@ def byte_string_to_array(byte_string, channels, bytedepth):
         fmt = "i"
 
     array = np.array(struct.unpack('%d%s' % (N, fmt) * channels, byte_string))
-    return array.reshape([N, channels]) / (2.0 ** (8 * bytedepth - 1))
+    return array.reshape([N, int(channels)]) / (2.0 ** (8 * bytedepth - 1))
 
 
 def array_to_byte_string(array, bytedepth):

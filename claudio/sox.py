@@ -450,10 +450,10 @@ def play(input_file, start_t=0, end_t=None):
     if end_t:
         args.append("=%f" % end_t)
 
-    logging.info("Executing: %s", "".join(args))
+    logging.debug("Executing: %s", "".join(args))
     process_handle = subprocess.Popen(args, stderr=subprocess.PIPE)
     status = process_handle.wait()
-    logging.info(process_handle.stdout)
+    logging.debug(process_handle.stdout)
 
     return status == 0
 
@@ -493,9 +493,9 @@ def is_valid_file_format(input_file):
                 valid = file_ext in state
 
         if valid:
-            logging.info("SoX supports '%s' files.", file_ext)
+            logging.debug("SoX supports '%s' files.", file_ext)
         else:
-            logging.info("SoX does not support '%s' files.", file_ext)
+            logging.debug("SoX does not support '%s' files.", file_ext)
 
         return valid
 
@@ -636,10 +636,10 @@ def sox(args):
         args[0] = "sox"
 
     try:
-        logging.info("Executing: %s", "".join(args))
+        logging.debug("Executing: %s", "".join(args))
         process_handle = subprocess.Popen(args, stderr=subprocess.PIPE)
         status = process_handle.wait()
-        logging.info(process_handle.stdout)
+        logging.debug(process_handle.stdout)
         return status == 0
     except OSError as error_msg:
         logging.error("OSError: SoX failed! %s", error_msg)
