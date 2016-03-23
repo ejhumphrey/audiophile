@@ -1,5 +1,6 @@
 import os
 import unittest
+import shutil
 import six
 import wave
 
@@ -71,6 +72,17 @@ class SoxTests(unittest.TestCase):
                      start_time=0,
                      end_time=0.1),
             "Conversion failed.")
+
+    def test_trim_inplace(self):
+        another_file = util.temp_file(formats.WAVE)
+        shutil.copy(self.input_file, another_file)
+        self.assert_(
+            sox.trim(input_file=another_file,
+                     output_file=None,
+                     start_time=0,
+                     end_time=0.1),
+            "Conversion failed.")
+        self.assert_(os.path.exists(another_file))
 
 
 if __name__ == "__main__":

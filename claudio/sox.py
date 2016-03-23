@@ -118,8 +118,15 @@ def trim(input_file, output_file, start_time, end_time):
     """
     assert start_time >= 0, "The value for 'start_time' must be positive."
     assert end_time >= 0, "The value for 'end_time' must be positive."
-    return sox(['sox', input_file, output_file, 'trim',
-                '%0.8f' % start_time, '%0.8f' % (end_time - start_time)])
+    inplace = not bool(output_file)
+    if inplace:
+        output_file = util.temp_file(os.path.splitext(input_file)[-1])
+
+    status = sox(['sox', input_file, output_file, 'trim',
+                  '%0.8f' % start_time, '%0.8f' % (end_time - start_time)])
+    if inplace:
+        os.rename(output_file, input_file)
+    return status
 
 
 def pad(input_file, output_file, start_duration=0, end_duration=0):
