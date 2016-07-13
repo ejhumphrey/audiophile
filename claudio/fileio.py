@@ -10,6 +10,8 @@ import claudio.formats as formats
 import claudio.sox as sox
 import claudio.util as util
 
+logger = logging.getLogger(__name__)
+
 
 class AudioFile(object):
     """Abstract AudioFile base class."""
@@ -40,7 +42,7 @@ class AudioFile(object):
         mode : str, default='r'
             Open the file for [r]eading or [w]riting.
         """
-        logging.debug(util.classy_print(AudioFile, "Constructor."))
+        logger.debug(util.classy_print(AudioFile, "Constructor."))
         if not sox.is_valid_file_format(filepath):
             raise ValueError("Cannot handle this filetype: {}"
                              "".format(filepath))
@@ -55,9 +57,9 @@ class AudioFile(object):
         self._temp_filepath = util.temp_file(formats.WAVE)
 
         self._mode = mode
-        logging.debug(util.classy_print(AudioFile, "Opening wave file."))
+        logger.debug(util.classy_print(AudioFile, "Opening wave file."))
         self.__get_handle__(self.filepath, samplerate, channels, bytedepth)
-        logging.debug(util.classy_print(AudioFile, "Success!"))
+        logger.debug(util.classy_print(AudioFile, "Success!"))
         if self.duration == 0:
             warnings.warn("Caution: You have opened an empty sound file!")
 
@@ -129,11 +131,11 @@ class AudioFile(object):
 
     def close(self):
         """Explicit destructor."""
-        logging.debug(util.classy_print(AudioFile, "Cleaning up."))
+        logger.debug(util.classy_print(AudioFile, "Cleaning up."))
         if self._wave_handle:
             self._wave_handle.close()
         if self._mode == 'w' and self._CONVERT:
-            logging.debug(
+            logger.debug(
                 util.classy_print(AudioFile,
                                   "Conversion required for writing."))
             # TODO: Update to if / raise
@@ -143,8 +145,8 @@ class AudioFile(object):
                                bytedepth=self.bytedepth,
                                channels=self.channels)
         if self._temp_filepath and os.path.exists(self._temp_filepath):
-            logging.debug(util.classy_print(AudioFile,
-                                            "Temporary file deleted."))
+            logger.debug(util.classy_print(AudioFile,
+                                           "Temporary file deleted."))
             os.remove(self._temp_filepath)
 
     def __del__(self):
@@ -291,7 +293,7 @@ class FramedAudioFile(AudioFile):
             framesize.
 
         """
-        logging.debug(util.classy_print(FramedAudioFile, "Constructor."))
+        logger.debug(util.classy_print(FramedAudioFile, "Constructor."))
         super(FramedAudioFile, self).__init__(
             filepath, samplerate=samplerate, channels=channels,
             bytedepth=bytedepth, mode=mode)
@@ -300,7 +302,7 @@ class FramedAudioFile(AudioFile):
         self._alignment = alignment
         self._offset = offset
         self._time_points = [None]
-        logging.debug(util.classy_print(FramedAudioFile, "Init Striding."))
+        logger.debug(util.classy_print(FramedAudioFile, "Init Striding."))
         self._init_striding(time_points, framerate, stride, overlap)
         self.reset()
 
@@ -345,7 +347,7 @@ class FramedAudioFile(AudioFile):
 
     def reset(self):
         """TODO(ejhumphrey)"""
-        logging.debug(util.classy_print(FramedAudioFile, "Reset."))
+        logger.debug(util.classy_print(FramedAudioFile, "Reset."))
         super(FramedAudioFile, self).reset()
         self.framebuffer = np.zeros(self.frameshape)
         self._time_index = 0
@@ -547,7 +549,7 @@ class FramedAudioReader(FramedAudioFile):
 
         # Always read.
         mode = 'r'
-        logging.debug(util.classy_print(FramedAudioReader, "Constructor."))
+        logger.debug(util.classy_print(FramedAudioReader, "Constructor."))
         self._wave_handle = None
         super(FramedAudioReader, self).__init__(
             filepath, framesize, samplerate, channels, bytedepth, mode,
@@ -581,7 +583,7 @@ class FramedAudioReader(FramedAudioFile):
         elif (sample_index + framesize) <= 0:
             return frame
 
-        logging.debug(util.classy_print(
+        logger.debug(util.classy_print(
             FramedAudioReader, "sample_index = %d" % sample_index))
         self._wave_handle.setpos(sample_index)
         newdata = util.byte_string_to_array(
