@@ -1,7 +1,3 @@
-import logging
-
-logging.basicConfig(level=logging.CRITICAL)
-
 from .fileio import read
 from .fileio import write
 from . import formats

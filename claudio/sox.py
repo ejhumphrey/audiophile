@@ -16,7 +16,7 @@ import claudio.formats as formats
 import claudio.util as util
 
 
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Error Message for SoX
 __NO_SOX__ = """SoX could not be found!
@@ -33,7 +33,7 @@ def _sox_check():
     sox_res = subprocess.check_output(['sox', '-h'])
     status = 'SPECIAL FILENAMES' in str(sox_res)
     if not status:
-        logging.warning(__NO_SOX__)
+        logger.warning(__NO_SOX__)
     return status
 
 
@@ -457,10 +457,10 @@ def play(input_file, start_t=0, end_t=None):
     if end_t:
         args.append("=%f" % end_t)
 
-    logging.debug("Executing: %s", "".join(args))
+    logger.debug("Executing: %s", "".join(args))
     process_handle = subprocess.Popen(args, stderr=subprocess.PIPE)
     status = process_handle.wait()
-    logging.debug(process_handle.stdout)
+    logger.debug(process_handle.stdout)
 
     return status == 0
 
@@ -500,9 +500,9 @@ def is_valid_file_format(input_file):
                 valid = file_ext in state
 
         if valid:
-            logging.debug("SoX supports '%s' files.", file_ext)
+            logger.debug("SoX supports '%s' files.", file_ext)
         else:
-            logging.debug("SoX does not support '%s' files.", file_ext)
+            logger.debug("SoX does not support '%s' files.", file_ext)
 
         return valid
 
@@ -643,13 +643,13 @@ def sox(args):
         args[0] = "sox"
 
     try:
-        logging.debug("Executing: %s", "".join(args))
+        logger.debug("Executing: %s", "".join(args))
         process_handle = subprocess.Popen(args, stderr=subprocess.PIPE)
         status = process_handle.wait()
-        logging.debug(process_handle.stdout)
+        logger.debug(process_handle.stdout)
         return status == 0
     except OSError as error_msg:
-        logging.error("OSError: SoX failed! %s", error_msg)
+        logger.error("OSError: SoX failed! %s", error_msg)
     except TypeError as error_msg:
-        logging.error("TypeError: %s", error_msg)
+        logger.error("TypeError: %s", error_msg)
     return False
