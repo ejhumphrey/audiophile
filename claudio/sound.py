@@ -2,7 +2,7 @@ import numpy as np
 
 import claudio.fileio as fileio
 import claudio.formats as formats
-import claudio.sox as sox
+import claudio.csox as sox
 import claudio.util as util
 
 

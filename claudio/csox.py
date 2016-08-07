@@ -7,7 +7,7 @@ for mp3, aac, mp4, and so forth, various steps must be taken to first build
 the codec libraries, and *then* compile sox from source.
 """
 from __future__ import print_function
-
+import sox.core as score
 import logging
 import os
 import subprocess
@@ -560,18 +560,20 @@ def file_info(input_file):
             - Sample Encoding
             - Sample Rate
     """
-    if os.path.exists(input_file):
-        ret_dict = {}
-        soxi_out = subprocess.check_output(["soxi", input_file]).split('\n')
-        for line in soxi_out:
-            if len(line) > 0:
-                separator = line.find(':')
-                key = line[:separator].strip()
-                value = line[separator+1:].strip()
-                ret_dict[key] = soxi_parse(key, value)
-        return ret_dict
-    else:
-        return {}
+    return score.soxi(input_file)
+    # if os.path.exists(input_file):
+    #     ret_dict = {}
+    #     soxi_out = subprocess.check_output(
+    #         [b"soxi", bytearray(input_file)]).split('\n')
+    #     for line in soxi_out:
+    #         if len(line) > 0:
+    #             separator = line.find(':')
+    #             key = line[:separator].strip()
+    #             value = line[separator+1:].strip()
+    #             ret_dict[key] = soxi_parse(key, value)
+    #     return ret_dict
+    # else:
+    #     return {}
 
 
 def file_stats(input_file):

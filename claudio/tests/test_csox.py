@@ -5,7 +5,7 @@ import six
 import wave
 
 import claudio.formats as formats
-import claudio.sox as sox
+import claudio.csox as sox
 import claudio.util as util
 
 
@@ -83,6 +83,11 @@ class SoxTests(unittest.TestCase):
                      end_time=0.1),
             "Conversion failed.")
         self.assert_(os.path.exists(another_file))
+
+    def test_file_info(self):
+        self.assert_(
+            sox.file_info(self.input_file),
+            "File Info failed.")
 
 
 if __name__ == "__main__":

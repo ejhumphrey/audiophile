@@ -7,7 +7,7 @@ import warnings
 import wave
 
 import claudio.formats as formats
-import claudio.sox as sox
+import claudio.csox as sox
 import claudio.util as util
 
 logger = logging.getLogger(__name__)
