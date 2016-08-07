@@ -7,10 +7,12 @@ for mp3, aac, mp4, and so forth, various steps must be taken to first build
 the codec libraries, and *then* compile sox from source.
 """
 from __future__ import print_function
-import sox.core as score
+
 import logging
 import os
 import subprocess
+from subprocess import CalledProcessError
+import yaml
 
 import claudio.formats as formats
 import claudio.util as util
@@ -38,6 +40,14 @@ def _sox_check():
 
 
 has_sox = _sox_check()
+
+
+def enquote_filepath(fpath):
+    """Wrap a filepath in double-quotes to protect difficult characters.
+    """
+    if ' ' in fpath:
+        fpath = '"{}"'.format(fpath.strip("'").strip('"'))
+    return fpath
 
 
 def assert_sox():
@@ -68,7 +78,7 @@ def split_stereo(input_file, output_file_left, output_file_right):
     """
     left_args = ['sox', '-D', input_file, output_file_left, 'remix', '1']
     right_args = ['sox', '-D', input_file, output_file_right, 'remix', '2']
-    return sox(left_args) and sox(right_args)
+    return _sox(left_args) and _sox(right_args)
 
 
 def combine_as_stereo(left_channel, right_channel, output_file):
@@ -91,7 +101,7 @@ def combine_as_stereo(left_channel, right_channel, output_file):
     status : bool
         True on success.
     """
-    return sox(['sox', '-M', left_channel, right_channel, output_file])
+    return _sox(['sox', '-M', left_channel, right_channel, output_file])
 
 
 def trim(input_file, output_file, start_time, end_time):
@@ -122,8 +132,8 @@ def trim(input_file, output_file, start_time, end_time):
     if inplace:
         output_file = util.temp_file(os.path.splitext(input_file)[-1])
 
-    status = sox(['sox', input_file, output_file, 'trim',
-                  '%0.8f' % start_time, '%0.8f' % (end_time - start_time)])
+    status = _sox(['sox', input_file, output_file, 'trim',
+                   '%0.8f' % start_time, '%0.8f' % (end_time - start_time)])
     if inplace:
         os.rename(output_file, input_file)
     return status
@@ -154,8 +164,8 @@ def pad(input_file, output_file, start_duration=0, end_duration=0):
     """
     assert start_duration >= 0, "Start duration must be positive."
     assert end_duration >= 0, "End duration must be positive."
-    return sox(['sox', input_file, output_file, 'pad',
-               '%0.8f' % start_duration, '%0.8f' % end_duration])
+    return _sox(['sox', input_file, output_file, 'pad',
+                 '%0.8f' % start_duration, '%0.8f' % end_duration])
 
 
 def fade(input_file, output_file, fade_in_time=1, fade_out_time=8,
@@ -190,8 +200,8 @@ def fade(input_file, output_file, fade_in_time=1, fade_out_time=8,
     assert fade_shape in fade_shapes, "Invalid fade shape."
     assert fade_in_time >= 0, "Fade in time must be nonnegative."
     assert fade_out_time >= 0, "Fade out time must be nonnegative."
-    return sox(['sox', input_file, output_file, 'fade', '%s' % fade_shape,
-                '%0.8f' % fade_in_time, '0', '%0.8f' % fade_out_time])
+    return _sox(['sox', input_file, output_file, 'fade', '%s' % fade_shape,
+                 '%0.8f' % fade_in_time, '0', '%0.8f' % fade_out_time])
 
 
 def convert(input_file, output_file,
@@ -235,7 +245,7 @@ def convert(input_file, output_file,
     if samplerate:
         args += ['rate', '-I', '%f' % samplerate]
 
-    return sox(args)
+    return _sox(args)
 
 
 def mix(file_list, output_file):
@@ -259,7 +269,7 @@ def mix(file_list, output_file):
         args.append(fname)
     args.append(output_file)
 
-    return sox(args)
+    return _sox(args)
 
 
 def concatenate(file_list, output_file):
@@ -284,7 +294,7 @@ def concatenate(file_list, output_file):
         args.append(fname)
     args.append(output_file)
 
-    return sox(args)
+    return _sox(args)
 
 
 def normalize(input_file, output_file, db_level=-3):
@@ -305,7 +315,7 @@ def normalize(input_file, output_file, db_level=-3):
     status : bool
         True on success.
     """
-    return sox(['sox', "--norm=%f" % db_level, input_file, output_file])
+    return _sox(['sox', "--norm=%f" % db_level, input_file, output_file])
 
 
 def remove_silence(input_file, output_file,
@@ -342,7 +352,7 @@ def remove_silence(input_file, output_file,
     args.append("%f" % min_voicing_duration)
     args.append("%f%%" % silence_threshold)
 
-    return sox(args)
+    return _sox(args)
 
 
 def split_along_silence(input_file, output_file, min_silence_dur=0.5,
@@ -389,7 +399,7 @@ def split_along_silence(input_file, output_file, min_silence_dur=0.5,
     args.append("newfile")
     args.append(":")
     args.append("restart")
-    return sox(args)
+    return _sox(args)
 
 
 def play_excerpt(input_file, duration=5, use_fade=False,
@@ -560,7 +570,7 @@ def file_info(input_file):
             - Sample Encoding
             - Sample Rate
     """
-    return score.soxi(input_file)
+    return soxi(input_file)
     # if os.path.exists(input_file):
     #     ret_dict = {}
     #     soxi_out = subprocess.check_output(
@@ -617,14 +627,14 @@ def file_stats(input_file):
             if len(line) > 0:
                 separator = line.find(':')
                 key = line[:separator].strip().replace(' ', '').lower()
-                value = line[separator+1:].strip()
+                value = line[separator + 1:].strip()
                 ret_dict[key] = value
         return ret_dict
     else:
         return {}
 
 
-def sox(args):
+def _sox(args):
     """Pass an argument list to SoX.
 
     Parameters
@@ -655,3 +665,50 @@ def sox(args):
     except TypeError as error_msg:
         logger.error("TypeError: %s", error_msg)
     return False
+
+
+SOXI_ARGS = ['b', 'c', 'a', 'D', 'e', 't', 's', 'r']
+
+
+def soxi(filepath, argument=None):
+    ''' Base call to Soxi.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to audio file.
+
+    argument : str
+        Argument to pass to Soxi.
+
+    Returns
+    -------
+    shell_output : str, or dict if argument is None
+        Command line output of Soxi
+    '''
+
+    if argument is not None and argument not in SOXI_ARGS:
+        raise ValueError("Invalid argument '{}' to Soxi".format(argument))
+
+    args = ['soxi']
+    if argument:
+        args.append("-{}".format(argument))
+    args.append(enquote_filepath(filepath))
+
+    try:
+        shell_output = subprocess.check_output(
+            " ".join(args),
+            shell=True, stderr=subprocess.PIPE
+        )
+    except CalledProcessError as cpe:
+        logging.info("Soxi error message: {}".format(cpe.output))
+        raise ValueError("Soxi failed with exit code {}"
+                         "".format(cpe.returncode))
+
+    shell_output = shell_output.decode("utf-8")
+
+    if argument is None:
+        result = yaml.load(str(shell_output))
+    else:
+        result = str(shell_output).strip('\n')
+    return result
