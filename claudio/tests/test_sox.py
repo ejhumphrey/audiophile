@@ -5,7 +5,7 @@ import six
 import wave
 
 import claudio.formats as formats
-import claudio.csox as sox
+import claudio.sox as sox
 import claudio.util as util
 
 
