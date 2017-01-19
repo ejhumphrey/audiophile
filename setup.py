@@ -31,6 +31,7 @@ setup(
     install_requires=[
         'numpy >= 1.8.0',
         'nose',
-        'six'
+        'six',
+        'pyyaml'
     ]
 )
