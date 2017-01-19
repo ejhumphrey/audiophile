@@ -26,11 +26,11 @@ install:
 
 script:
     - python --version
-    - nosetests --with-coverage --cover-erase --cover-package=claudio -v -w ./
+    - nosetests --with-coverage --cover-erase --cover-package=audiophile -v -w ./
 
 after_success:
     - coveralls
-    - pip uninstall -y claudio
+    - pip uninstall -y audiophile
 
 after_failure:
-    - pip uninstall -y claudio
+    - pip uninstall -y audiophile

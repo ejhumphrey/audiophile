@@ -1,4 +1,4 @@
-"""Unittests for CLAudio.
+"""Unittests for audiophile.
 
 TODO: Update this to py.test, fixtures and standalone methods. This is pretty
 old-school right here.

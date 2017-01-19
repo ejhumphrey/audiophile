@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import six
 
-import claudio.util as util
+import audiophile.util as util
 
 
 class EncodingTest(unittest.TestCase):

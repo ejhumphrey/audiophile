@@ -6,9 +6,9 @@ import os
 import warnings
 import wave
 
-import claudio.formats as formats
-import claudio.sox as sox
-import claudio.util as util
+import audiophile.formats as formats
+import audiophile.sox as sox
+import audiophile.util as util
 
 logger = logging.getLogger(__name__)
 

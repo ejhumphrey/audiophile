@@ -1,9 +1,9 @@
 import numpy as np
 
-import claudio.fileio as fileio
-import claudio.formats as formats
-import claudio.sox as sox
-import claudio.util as util
+import audiophile.fileio as fileio
+import audiophile.formats as formats
+import audiophile.sox as sox
+import audiophile.util as util
 
 
 def soundsc(signal, samplerate):

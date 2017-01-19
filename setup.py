@@ -2,20 +2,19 @@ import imp
 from setuptools import setup
 
 description = \
-    """Claudio -- A concise little audio library for getting audio samples into
-    and out of Python."""
+    """Audiophile - A flexible I/O library for audio files in Python."""
 
-version = imp.load_source('claudio.version', 'claudio/version.py')
+version = imp.load_source('audiophile.version', 'audiophile/version.py')
 
 setup(
-    name='claudio',
+    name='audiophile',
     version=version.version,
     description=description,
     author='Eric J. Humphrey',
     author_email='humphrey.eric@gmail.com',
-    url='http://github.com/ejhumphrey/claudio',
-    download_url='http://github.com/ejhumphrey/claudio/releases',
-    packages=['claudio'],
+    url='http://github.com/ejhumphrey/audiophile',
+    download_url='http://github.com/ejhumphrey/audiophile/releases',
+    packages=['audiophile'],
     package_data={},
     classifiers=[
         "License :: OSI Approved :: ISC License (ISCL)",

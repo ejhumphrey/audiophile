@@ -14,8 +14,8 @@ import subprocess
 from subprocess import CalledProcessError
 import yaml
 
-import claudio.formats as formats
-import claudio.util as util
+import audiophile.formats as formats
+import audiophile.util as util
 
 
 logger = logging.getLogger(__name__)
