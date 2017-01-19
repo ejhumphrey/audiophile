@@ -11,9 +11,9 @@ import six
 import tempfile
 import wave
 
-import claudio.formats as formats
-import claudio.fileio as fileio
-import claudio.util as util
+import audiophile.formats as formats
+import audiophile.fileio as fileio
+import audiophile.util as util
 
 
 class FileIOTests(unittest.TestCase):
